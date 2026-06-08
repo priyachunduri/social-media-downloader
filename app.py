@@ -1,26 +1,42 @@
 import streamlit as st
 import yt_dlp
+import os
 
-# వెబ్‌సైట్ కి పైన కనిపించే టైటిల్ అండ్ లుక్ సెట్ చేస్తున్నాం
-st.set_page_config(page_title="PurelyPriya Downloader", page_icon="✨", layout="centered")
+# వెబ్‌సైట్ ప్రొఫైల్ లుక్ సెట్ చేస్తున్నాం
+st.set_page_config(page_title="Social Downloader", page_icon="✨", layout="centered")
 
-# స్క్రీన్ మీద కనిపించే హెడ్డింగ్స్
 st.title("✨ All-in-One Social Media Downloader")
 st.write("యాడ్స్ లేవు, అశ్లీల పాప్-అప్స్ లేవు! సూపర్ క్లీన్ గా డౌన్‌లోడ్ చేసుకోండి.")
 
-# లింక్ పేస్ట్ చేయడానికి ఒక అందమైన బాక్స్
-video_url = st.text_input("🔗 ఇన్‌స్టాగ్రామ్ రీల్ లేదా వీడియో లింక్ ఇక్కడ పేస్ట్ చేయండి:")
+# లింక్ బాక్స్
+video_url = st.text_input("🔗 ఇన్‌స్టాగ్రామ్ లేదా యూట్యూబ్ లింక్ ఇక్కడ పేస్ట్ చేయండి:")
 
-# డౌన్‌లోడ్ బటన్
-if st.button("Download Video 🚀"):
+if st.button("Get Download Link 🚀"):
     if video_url:
-        with st.spinner("బ్యాక్‌గ్రౌండ్ లో మ్యాజిక్ జరుగుతోంది... ప్లీజ్ వెయిట్..."):
+        with st.spinner("బ్యాక్‌గ్రౌండ్ లో లింక్ జనరేట్ అవుతోంది... ప్లీజ్ వెయిట్..."):
             try:
-                # తాత్కాలికంగా లింక్ ని చెక్ చేస్తున్నాం
-                st.info("లింక్ కనెక్ట్ అవుతోంది! సర్వర్ చెకింగ్ నడుస్తోంది...")
-                # ఫ్యూచర్ లో ఇక్కడ క్లౌడ్ డౌన్లోడ్ లాజిక్ పెడతాం
-                st.success("వెబ్‌సైట్ స్క్రీన్ సూపర్ గా రెడీ అయిపోయింది ఫ్రెండ్! 🥳")
+                # yt-dlp కాన్ఫిగరేషన్ (వీడియో లింక్ మాత్రమే తెచ్చుకోవడానికి)
+                ydl_opts = {
+                    'format': 'best',
+                    'quiet': True,
+                    'no_warnings': True,
+                }
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(video_url, download=False)
+                    # అసలైన డైరెక్ట్ వీడియో యుఆర్ఎల్ ని తీసుకుంటున్నాం
+                    direct_link = info.get('url', None)
+                    title = info.get('title', 'video')
+                
+                if direct_link:
+                    st.success("🎉 మీ డౌన్‌లోడ్ లింక్ రెడీ అయిపోయింది!")
+                    # అందమైన బటన్ ద్వారా డైరెక్ట్ వీడియో ఓపెన్ లేదా డౌన్లోడ్ అయ్యేలా లింక్ ఇస్తున్నాం
+                    st.video(direct_link)
+                    st.markdown(f'[👉 క్లిక్ చేసి వీడియో డౌన్‌లోడ్ చేసుకోండి]({direct_link})')
+                else:
+                    st.error("లింక్ దొరకలేదు ఫ్రెండ్! ఒకసారి యుఆర్ఎల్ కరెక్ట్ గా ఉందో లేదో చూడు.")
+                    
             except Exception as e:
-                st.error(f"చిన్న ప్రాబ్లం వచ్చింది: {e}")
+                st.error("ఇన్‌స్టాగ్రామ్/యూట్యూబ్ సర్వర్ బ్లాక్ చేసింది. క్లౌడ్ ఐపీ ఇష్యూ వల్ల కొన్ని లింక్స్ అప్పుడప్పుడు ఫెయిల్ అవ్వచ్చు ఫ్రెండ్.")
     else:
         st.warning("ప్లీజ్, ఫస్ట్ ఏదైనా ఒక లింక్ పేస్ట్ చేయండి ఫ్రెండ్!")
