@@ -1,42 +1,99 @@
-import streamlit as st
+from flask import Flask, request, render_template_string
 import yt_dlp
-import os
 
-# వెబ్‌సైట్ ప్రొఫైల్ లుక్ సెట్ చేస్తున్నాం
-st.set_page_config(page_title="Social Downloader", page_icon="✨", layout="centered")
+app = Flask(__name__)
 
-st.title("✨ All-in-One Social Media Downloader")
-st.write("యాడ్స్ లేవు, అశ్లీల పాప్-అప్స్ లేవు! సూపర్ క్లీన్ గా డౌన్‌లోడ్ చేసుకోండి.")
+HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SeeUrReel Downloader</title>
+    <style>
+        body{
+            font-family: Arial,sans-serif;
+            max-width:800px;
+            margin:auto;
+            padding:40px;
+            text-align:center;
+            background:#f7f7f7;
+        }
+        input{
+            width:80%;
+            padding:12px;
+            font-size:16px;
+        }
+        button{
+            padding:12px 20px;
+            background:#ff4b4b;
+            color:white;
+            border:none;
+            cursor:pointer;
+        }
+        .box{
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            margin-top:20px;
+        }
+    </style>
+</head>
+<body>
 
-# లింక్ బాక్స్
-video_url = st.text_input("🔗 ఇన్‌స్టాగ్రామ్ లేదా యూట్యూబ్ లింక్ ఇక్కడ పేస్ట్ చేయండి:")
+<h1>🎬 SeeUrReel Downloader</h1>
 
-if st.button("Get Download Link 🚀"):
-    if video_url:
-        with st.spinner("బ్యాక్‌గ్రౌండ్ లో లింక్ జనరేట్ అవుతోంది... ప్లీజ్ వెయిట్..."):
-            try:
-                # yt-dlp కాన్ఫిగరేషన్ (వీడియో లింక్ మాత్రమే తెచ్చుకోవడానికి)
-                ydl_opts = {
-                    'format': 'best',
-                    'quiet': True,
-                    'no_warnings': True,
-                }
-                
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(video_url, download=False)
-                    # అసలైన డైరెక్ట్ వీడియో యుఆర్ఎల్ ని తీసుకుంటున్నాం
-                    direct_link = info.get('url', None)
-                    title = info.get('title', 'video')
-                
-                if direct_link:
-                    st.success("🎉 మీ డౌన్‌లోడ్ లింక్ రెడీ అయిపోయింది!")
-                    # అందమైన బటన్ ద్వారా డైరెక్ట్ వీడియో ఓపెన్ లేదా డౌన్లోడ్ అయ్యేలా లింక్ ఇస్తున్నాం
-                    st.video(direct_link)
-                    st.markdown(f'[👉 క్లిక్ చేసి వీడియో డౌన్‌లోడ్ చేసుకోండి]({direct_link})')
-                else:
-                    st.error("లింక్ దొరకలేదు ఫ్రెండ్! ఒకసారి యుఆర్ఎల్ కరెక్ట్ గా ఉందో లేదో చూడు.")
-                    
-            except Exception as e:
-                st.error("ఇన్‌స్టాగ్రామ్/యూట్యూబ్ సర్వర్ బ్లాక్ చేసింది. క్లౌడ్ ఐపీ ఇష్యూ వల్ల కొన్ని లింక్స్ అప్పుడప్పుడు ఫెయిల్ అవ్వచ్చు ఫ్రెండ్.")
-    else:
-        st.warning("ప్లీజ్, ఫస్ట్ ఏదైనా ఒక లింక్ పేస్ట్ చేయండి ఫ్రెండ్!")
+<form method="POST">
+    <input type="text" name="url" placeholder="Paste YouTube URL">
+    <button type="submit">Get Link</button>
+</form>
+
+{% if link %}
+<div class="box">
+    <h3>{{title}}</h3>
+    <a href="{{link}}" target="_blank">
+        Download Video
+    </a>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="box">
+{{error}}
+</div>
+{% endif %}
+
+</body>
+</html>
+"""
+
+@app.route("/", methods=["GET","POST"])
+def home():
+
+    if request.method == "POST":
+
+        url = request.form.get("url")
+
+        try:
+            ydl_opts = {
+                "quiet": True,
+                "format": "best"
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+
+            return render_template_string(
+                HTML,
+                link=info.get("url"),
+                title=info.get("title")
+            )
+
+        except Exception as e:
+            return render_template_string(
+                HTML,
+                error=str(e)
+            )
+
+    return render_template_string(HTML)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
