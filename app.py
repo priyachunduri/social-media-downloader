@@ -42,7 +42,7 @@ HTML = """
 <h1>🎬 SeeUrReel Downloader</h1>
 
 <form method="POST">
-    <input type="text" name="url" placeholder="Paste YouTube URL">
+    <input type="text" name="url "Paste LINK Here">
     <button type="submit">Get Link</button>
 </form>
 
